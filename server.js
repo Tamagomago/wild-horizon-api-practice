@@ -1,27 +1,35 @@
 import http from 'node:http';
 import { getDataFromDB } from './database/db.js';
-import { handleFilterByField, setRes } from './utils.js';
+import { getDataByQueryParams, handleFilterByField, setRes } from './utils.js';
 
-const PORT = 8000;
+const PORT = 8001;
 
 const server = http.createServer(async (req, res) => {
-  if (req.url === '/api' && req.method === 'GET') {
-    setRes(res, 200, JSON.stringify(await getDataFromDB()));
+  const destinations = await getDataFromDB();
+  const urlObj = new URL(req.url, `http://${req.headers.host}`);
+  const queryObj = Object.fromEntries(urlObj.searchParams);
+
+  if (urlObj.pathname === '/api' && req.method === 'GET') {
+
+    console.log('from /api');
+    console.log(queryObj);
+    if (Object.keys(queryObj).length === 0) {
+      setRes(res, 200, JSON.stringify(destinations));
+      return;
+    }
+
+    const filteredDestinations = getDataByQueryParams(destinations, queryObj);
+    setRes(res, 200, JSON.stringify(filteredDestinations));
   } else if (req.url.startsWith('/api/continent') && req.method === 'GET') {
+
     const continent = req.url.split('/').pop();
-    setRes(
-      res,
-      200,
-      JSON.stringify(await handleFilterByField(await getDataFromDB(), 'continent', continent))
-    );
+    setRes(res, 200, JSON.stringify(handleFilterByField(destinations, 'continent', continent)));
   } else if (req.url.startsWith('/api/country') && req.method === 'GET') {
+
     const country = req.url.split('/').pop();
-    setRes(
-      res,
-      200,
-      JSON.stringify(await handleFilterByField(await getDataFromDB(), 'country', country))
-    );
+    setRes(res, 200, JSON.stringify(handleFilterByField(destinations, 'country', country)));
   } else {
+
     setRes(
       res,
       404,

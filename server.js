@@ -2,7 +2,7 @@ import http from 'node:http';
 import { getDataFromDB } from './database/db.js';
 import { getDataByQueryParams, handleFilterByField, setRes } from './utils.js';
 
-const PORT = 8001;
+const PORT = 8000;
 
 const server = http.createServer(async (req, res) => {
   const destinations = await getDataFromDB();
@@ -11,8 +11,6 @@ const server = http.createServer(async (req, res) => {
 
   if (urlObj.pathname === '/api' && req.method === 'GET') {
 
-    console.log('from /api');
-    console.log(queryObj);
     if (Object.keys(queryObj).length === 0) {
       setRes(res, 200, JSON.stringify(destinations));
       return;
